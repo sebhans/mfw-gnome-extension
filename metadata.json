@@ -1,0 +1,7 @@
+{
+  "name": "Mouse Follows Window",
+  "description": "Makes the mouse follow the focused window when warping",
+  "uuid": "mfw@sebhans.de",
+  "url": "https://github.com/sebhans/mfw-gnome-extension",
+  "shell-version": ["42"]
+}
