@@ -6,7 +6,7 @@ const Util = imports.misc.util;
 
 class Extension {
   constructor() {
-    console.warn(`constructing ${Me.metadata.name}`);
+    console.debug(`constructing ${Me.metadata.name}`);
     this.windowCreatedSignal = null;
     this.windowSignals = new Map();
     this.focusedWindowId = null;
@@ -21,9 +21,8 @@ class Extension {
    * widgets, connect signals or modify GNOME Shell's behavior.
    */
   enable() {
-    console.warn(`enabling ${Me.metadata.name}`);
+    console.debug(`enabling ${Me.metadata.name}`);
     Util.spawn(['/usr/local/bin/input-emulator', 'start', 'mouse', '--x-max', '5000', '--y-max', '5000']);
-    console.warn(`input-emulator started`);
     this.windowCreatedSignal = global.display.connect('window-created', this._onWindowCreated.bind(this)),
     this._connectAllWindows();
   }
@@ -37,14 +36,13 @@ class Extension {
    * Not doing so is the most common reason extensions are rejected in review!
    */
   disable() {
-    console.warn(`disabling ${Me.metadata.name}`);
+    console.debug(`disabling ${Me.metadata.name}`);
     if (this.windowCreatedSignal) {
       global.display.disconnect(this.windowCreatedSignal);
       this.windowCreatedSignal = null;
     }
     this._disconnectAllWindows();
     Util.spawn(['/usr/local/bin/input-emulator', 'stop', 'mouse']);
-    console.warn(`input-emulator stopped`);
   }
 
 
@@ -79,27 +77,27 @@ class Extension {
 
 
   _onWindowCreated(display, window) {
-    console.warn(`created [${window.get_title()}]`);
+    console.debug(`created [${window.get_title()}]`);
     this._connectWindowSignals(window);
   }
 
 
   _onFocusWindowChanged(window) {
     this.focusedWindowId = window.get_id();
-    console.warn(`focused [${window.get_title()}]`);
+    console.debug(`focused [${window.get_title()}]`);
   }
 
 
   _onWindowChanged(window) {
-    console.warn(`moved [${window.get_title()}]`);
+    console.debug(`moved [${window.get_title()}]`);
     if (!window.get_id() == this.focusedWindowId) return;
 
     let workArea = window.get_work_area_current_monitor();
     let frame = window.get_frame_rect();
-    console.warn(`moved focused [${window.get_title()}]: ${frame.width}x${frame.height}+${frame.x}+${frame.y} of ${workArea.width}/${workArea.height}`);
+    console.debug(`moved focused [${window.get_title()}]: ${frame.width}x${frame.height}+${frame.x}+${frame.y} of ${workArea.width}/${workArea.height}`);
 
     if (frame.width == workArea.width / 2 && frame.height == workArea.height) {
-      console.warn(`split [${window.get_title()}]; warping`);
+      console.debug(`split [${window.get_title()}]; warping`);
       this._ensureMouseIsIn(frame);
     }
   }
@@ -113,7 +111,7 @@ class Extension {
     let target_y = frame.y + frame.height / 2;
     let dx = target_x - mouse_x;
     let dy = target_y - mouse_y;
-    console.warn(`moving mouse ${dx}/${dy}`);
+    console.debug(`moving mouse ${dx}/${dy}`);
     Util.spawn(['/usr/local/bin/input-emulator', 'mouse', 'move', `${dx}`, `${dy}`]);
   }
 }
@@ -130,7 +128,7 @@ class Extension {
  * @returns {object} an object with enable() and disable() methods
  */
 function init(meta) {
-  console.warn(`initializing ${meta.metadata.name}`);
+  console.debug(`initializing ${meta.metadata.name}`);
 
   return new Extension();
 }
