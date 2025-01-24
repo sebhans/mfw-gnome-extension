@@ -129,8 +129,11 @@ class Extension {
     let target_y = frame.y + frame.height / 2;
     let dx = target_x - mouse_x;
     let dy = target_y - mouse_y;
-    console.debug(`moving mouse ${dx}/${dy}`);
+    console.debug(`moving mouse from ${mouse_x}/${mouse_y} to ${target_x}/${target_y} -> ${dx}/${dy}`);
     Util.spawn(['/usr/local/bin/input-emulator', 'mouse', 'move', `${dx}`, `${dy}`]);
+
+    let [after_x, after_y] = global.get_pointer();
+    console.debug(`ended up at ${after_x}/${after_y}`);
   }
 }
 
