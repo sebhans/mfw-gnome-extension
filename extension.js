@@ -80,7 +80,16 @@ class Extension {
 
 
   _onWindowCreated(display, window) {
-    console.debug(`created [${window.get_title()}]`);
+    switch (window.get_window_type()) {
+      case Meta.WindowType.MENU:
+      case Meta.WindowType.DROPDOWN_MENU:
+      case Meta.WindowType.POPUP_MENU:
+      case Meta.WindowType.TOOLTIP:
+      case Meta.WindowType.NOTIFICATION:
+      case Meta.WindowType.COMBO:
+        return;
+    }
+    console.debug(`created [${window.get_title()}] [${window.get_wm_class()}] type:${window.get_window_type()}`);
     this._connectWindowSignals(window);
     this.windowGeometries.set(window, window.get_frame_rect());
   }
