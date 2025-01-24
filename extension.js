@@ -6,7 +6,6 @@ const Util = imports.misc.util;
 
 class Extension {
   constructor() {
-    console.debug(`constructing ${Me.metadata.name}`);
     this.windowCreatedSignal = null;
     this.windowSignals = new Map();
     this.focusedWindowId = null;
@@ -128,7 +127,5 @@ class Extension {
  * @returns {object} an object with enable() and disable() methods
  */
 function init(meta) {
-  console.debug(`initializing ${meta.metadata.name}`);
-
   return new Extension();
 }
