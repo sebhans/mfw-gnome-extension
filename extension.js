@@ -3,11 +3,14 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Util = imports.misc.util;
 
+const WARP_DISTANCE = 50;
+
 
 class Extension {
   constructor() {
     this.windowCreatedSignal = null;
     this.windowSignals = new Map();
+    this.windowGeometries = new Map();
     this.focusedWindowId = null;
   }
 
@@ -41,6 +44,7 @@ class Extension {
       this.windowCreatedSignal = null;
     }
     this._disconnectAllWindows();
+    this.windowGeometries.clear();
     Util.spawn(['/usr/local/bin/input-emulator', 'stop', 'mouse']);
   }
 
@@ -78,6 +82,7 @@ class Extension {
   _onWindowCreated(display, window) {
     console.debug(`created [${window.get_title()}]`);
     this._connectWindowSignals(window);
+    this.windowGeometries.set(window, window.get_frame_rect());
   }
 
 
@@ -89,20 +94,34 @@ class Extension {
 
   _onWindowChanged(window) {
     console.debug(`moved [${window.get_title()}]`);
-    if (!window.get_id() == this.focusedWindowId) return;
+    let frame = window.get_frame_rect();
+    if (!window.get_id() == this.focusedWindowId) {
+      this.windowGeometries.set(window, frame);
+      return;
+    }
 
     let workArea = window.get_work_area_current_monitor();
-    let frame = window.get_frame_rect();
     console.debug(`moved focused [${window.get_title()}]: ${frame.width}x${frame.height}+${frame.x}+${frame.y} of ${workArea.width}/${workArea.height}`);
 
-    if (frame.width == workArea.width / 2 && frame.height == workArea.height) {
+    let oldFrame = this.windowGeometries.get(window);
+    if (oldFrame && this._hasWarped(frame, oldFrame)) {
       console.debug(`split [${window.get_title()}]; warping`);
-      this._ensureMouseIsIn(frame);
+      this._ensureMouseIsIn(window);
     }
+    this.windowGeometries.set(window, frame);
   }
 
 
-  _ensureMouseIsIn(frame) {
+  _hasWarped(frame, oldFrame) {
+    return Math.abs(frame.x - oldFrame.x) >= WARP_DISTANCE
+        || Math.abs(frame.y - oldFrame.y) >= WARP_DISTANCE
+        || Math.abs(frame.width - oldFrame.width) >= WARP_DISTANCE
+        || Math.abs(frame.height - oldFrame.height) >= WARP_DISTANCE;
+  }
+
+
+  _ensureMouseIsIn(window) {
+    const frame = window.get_frame_rect();
     let [mouse_x, mouse_y] = global.get_pointer();
     if (mouse_x >= frame.x && mouse_x < frame.x + frame.width && mouse_y >= frame.y && mouse_y < frame.y + frame.height) return;
 
