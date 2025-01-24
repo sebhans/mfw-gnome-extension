@@ -134,6 +134,9 @@ class Extension {
     let [mouse_x, mouse_y] = global.get_pointer();
     if (mouse_x >= frame.x && mouse_x < frame.x + frame.width && mouse_y >= frame.y && mouse_y < frame.y + frame.height) return;
 
+    // make sure the window is in the foreground lest it lose focus immediately
+    window.activate(global.get_current_time());
+
     let target_x = frame.x + frame.width / 2;
     let target_y = frame.y + frame.height / 2;
     let dx = target_x - mouse_x;
