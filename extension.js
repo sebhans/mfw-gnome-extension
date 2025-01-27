@@ -25,8 +25,7 @@ class Extension {
   enable() {
     console.debug(`enabling ${Me.metadata.name}`);
     Util.spawn(['/usr/local/bin/input-emulator', 'start', 'mouse', '--x-max', '5000', '--y-max', '5000']);
-    this.windowCreatedSignal = global.display.connect('window-created', this._onWindowCreated.bind(this)),
-    this._connectAllWindows();
+    this._trackAllWindows();
   }
 
 
@@ -39,47 +38,40 @@ class Extension {
    */
   disable() {
     console.debug(`disabling ${Me.metadata.name}`);
-    if (this.windowCreatedSignal) {
-      global.display.disconnect(this.windowCreatedSignal);
-      this.windowCreatedSignal = null;
-    }
-    this._disconnectAllWindows();
-    this.windowGeometries.clear();
+    this._untrackAllWindows();
     Util.spawn(['/usr/local/bin/input-emulator', 'stop', 'mouse']);
   }
 
 
-  _connectAllWindows() {
+  _trackAllWindows() {
+    this.windowCreatedSignal = global.display.connect('window-created', this._onWindowCreated.bind(this));
+    this.focusedWindowId = global.display.focus_window?.get_id();
     global.get_window_actors().forEach(actor => {
-      this._connectWindowSignals(actor.meta_window);
+      this._trackWindow(actor.meta_window);
     });
   }
 
 
-  _disconnectAllWindows() {
+  _untrackAllWindows() {
+    if (this.windowCreatedSignal) {
+      global.display.disconnect(this.windowCreatedSignal);
+      this.windowCreatedSignal = null;
+    }
+
     this.windowSignals.forEach((signals, window) => {
       signals.forEach(signalId => window.disconnect(signalId));
     });
     this.windowSignals.clear();
+    this.windowGeometries.clear();
+    this.focusedWindowId = null;
   }
 
 
-  _connectWindowSignals(window) {
+  _trackWindow(window) {
     if (this.windowSignals.has(window)) {
       return;
     }
 
-    const signals = [
-      window.connect('focus', this._onFocusWindowChanged.bind(this)),
-      window.connect('position-changed', this._onWindowChanged.bind(this)),
-      window.connect('size-changed', this._onWindowChanged.bind(this)),
-    ];
-
-    this.windowSignals.set(window, signals);
-  }
-
-
-  _onWindowCreated(display, window) {
     switch (window.get_window_type()) {
       case Meta.WindowType.MENU:
       case Meta.WindowType.DROPDOWN_MENU:
@@ -89,9 +81,21 @@ class Extension {
       case Meta.WindowType.COMBO:
         return;
     }
-    console.debug(`created [${window.get_title()}] [${window.get_wm_class()}] type:${window.get_window_type()}`);
-    this._connectWindowSignals(window);
+
+    const signals = [
+      window.connect('focus', this._onFocusWindowChanged.bind(this)),
+      window.connect('position-changed', this._onWindowChanged.bind(this)),
+      window.connect('size-changed', this._onWindowChanged.bind(this)),
+    ];
+
+    this.windowSignals.set(window, signals);
     this.windowGeometries.set(window, window.get_frame_rect());
+  }
+
+
+  _onWindowCreated(display, window) {
+    console.debug(`created [${window.get_title()}] [${window.get_wm_class()}] type:${window.get_window_type()}`);
+    this._trackWindow(window);
   }
 
 
