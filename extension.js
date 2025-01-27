@@ -93,7 +93,7 @@ class Extension {
   }
 
 
-  _onWindowCreated(display, window) {
+  _onWindowCreated(_display, window) {
     console.debug(`created [${window.get_title()}] [${window.get_wm_class()}] type:${window.get_window_type()}`);
     this._trackWindow(window);
   }
@@ -164,6 +164,6 @@ class Extension {
  * @param {ExtensionMeta} meta - An extension meta object
  * @returns {object} an object with enable() and disable() methods
  */
-function init(meta) {
+function init(_meta) {
   return new Extension();
 }
