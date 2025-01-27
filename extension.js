@@ -69,7 +69,7 @@ class Extension {
       return;
     }
 
-    let signals = [
+    const signals = [
       window.connect('focus', this._onFocusWindowChanged.bind(this)),
       window.connect('position-changed', this._onWindowChanged.bind(this)),
       window.connect('size-changed', this._onWindowChanged.bind(this)),
@@ -103,16 +103,16 @@ class Extension {
 
   _onWindowChanged(window) {
     console.debug(`moved [${window.get_title()}]`);
-    let frame = window.get_frame_rect();
-    if (!window.get_id() == this.focusedWindowId) {
+    const frame = window.get_frame_rect();
+    if (window.get_id() != this.focusedWindowId) {
       this.windowGeometries.set(window, frame);
       return;
     }
 
-    let workArea = window.get_work_area_current_monitor();
+    const workArea = window.get_work_area_current_monitor();
     console.debug(`moved focused [${window.get_title()}]: ${frame.width}x${frame.height}+${frame.x}+${frame.y} of ${workArea.width}/${workArea.height}`);
 
-    let oldFrame = this.windowGeometries.get(window);
+    const oldFrame = this.windowGeometries.get(window);
     if (oldFrame && this._hasWarped(frame, oldFrame)) {
       console.debug(`split [${window.get_title()}]; warping`);
       this._ensureMouseIsIn(window);
@@ -131,20 +131,20 @@ class Extension {
 
   _ensureMouseIsIn(window) {
     const frame = window.get_frame_rect();
-    let [mouse_x, mouse_y] = global.get_pointer();
+    const [mouse_x, mouse_y] = global.get_pointer();
     if (mouse_x >= frame.x && mouse_x < frame.x + frame.width && mouse_y >= frame.y && mouse_y < frame.y + frame.height) return;
 
     // make sure the window is in the foreground lest it lose focus immediately
     window.activate(global.get_current_time());
 
-    let target_x = frame.x + frame.width / 2;
-    let target_y = frame.y + frame.height / 2;
-    let dx = target_x - mouse_x;
-    let dy = target_y - mouse_y;
+    const target_x = frame.x + frame.width / 2;
+    const target_y = frame.y + frame.height / 2;
+    const dx = target_x - mouse_x;
+    const dy = target_y - mouse_y;
     console.debug(`moving mouse from ${mouse_x}/${mouse_y} to ${target_x}/${target_y} -> ${dx}/${dy}`);
     Util.spawn(['/usr/local/bin/input-emulator', 'mouse', 'move', `${dx}`, `${dy}`]);
 
-    let [after_x, after_y] = global.get_pointer();
+    const [after_x, after_y] = global.get_pointer();
     console.debug(`ended up at ${after_x}/${after_y}`);
   }
 }
