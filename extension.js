@@ -3,7 +3,8 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Util = imports.misc.util;
 
-const WARP_DISTANCE = 50;
+const WARP_DISTANCE = 100;
+const WINDOW_FUZZ_DISTANCE = 20;
 
 
 class Extension {
@@ -102,6 +103,7 @@ class Extension {
   _onFocusWindowChanged(window) {
     this.focusedWindowId = window.get_id();
     console.debug(`focused [${window.get_title()}]`);
+    this._ensureMouseIsIn(window);
   }
 
 
@@ -136,7 +138,10 @@ class Extension {
   _ensureMouseIsIn(window) {
     const frame = window.get_frame_rect();
     const [mouse_x, mouse_y] = global.get_pointer();
-    if (mouse_x >= frame.x && mouse_x < frame.x + frame.width && mouse_y >= frame.y && mouse_y < frame.y + frame.height) return;
+    if (mouse_x >= frame.x - WINDOW_FUZZ_DISTANCE
+        && mouse_x < frame.x + frame.width + WINDOW_FUZZ_DISTANCE
+        && mouse_y >= frame.y - WINDOW_FUZZ_DISTANCE
+        && mouse_y < frame.y + frame.height + WINDOW_FUZZ_DISTANCE) return;
 
     // make sure the window is in the foreground lest it lose focus immediately
     window.activate(global.get_current_time());
