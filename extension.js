@@ -1,4 +1,4 @@
-const { Clutter, Meta, Shell, St } = imports.gi;
+const { Meta, Shell } = imports.gi;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Main = imports.ui.main
 const Me = ExtensionUtils.getCurrentExtension();
@@ -10,6 +10,8 @@ const WINDOW_FUZZ_DISTANCE = 20;
 const MAXIMIZE_SHORTCUT = "<Super>Up"
 const SPLIT_LEFT_SHORTCUT = "<Super>Left"
 const SPLIT_RIGHT_SHORTCUT = "<Super>Right"
+const SPLIT_UP_SHORTCUT = "<Super><Shift>Up"
+const SPLIT_DOWN_SHORTCUT = "<Super><Shift>Down"
 
 
 class KeyManager {
@@ -60,7 +62,6 @@ class Extension {
     this.windowSignals = new Map();
     this.windowGeometries = new Map();
     this.focusedWindowId = null;
-
     this._keyManager = null;
   }
 
@@ -99,6 +100,8 @@ class Extension {
     this._keyManager.listenFor(MAXIMIZE_SHORTCUT, this._handleMaximize.bind(this))
     this._keyManager.listenFor(SPLIT_LEFT_SHORTCUT, this._handleSplitLeft.bind(this))
     this._keyManager.listenFor(SPLIT_RIGHT_SHORTCUT, this._handleSplitRight.bind(this))
+    this._keyManager.listenFor(SPLIT_UP_SHORTCUT, this._handleSplitUp.bind(this))
+    this._keyManager.listenFor(SPLIT_DOWN_SHORTCUT, this._handleSplitDown.bind(this))
   }
 
 
@@ -134,11 +137,41 @@ class Extension {
   };
 
 
+  _handleSplitUp() {
+    const window = global.display.focus_window;
+    if (!window) return;
+    console.warn('[mfw-extension] splitting up')
+    const workArea = window.get_work_area_current_monitor();
+    const frame = window.get_frame_rect()
+    if (this._isTiledLeftOrRight(workArea, frame)) {
+      console.warn('[mfw-extension] is tiled')
+      this._warp(window, frame.x, workArea.y, frame.width, Math.floor(workArea.height / 2));
+    } else {
+      console.warn('[mfw-extension] is NOT tiled')
+    }
+  }
+
+
+  _handleSplitDown() {
+    const window = global.display.focus_window;
+    if (!window) return;
+    const workArea = window.get_work_area_current_monitor();
+    const frame = window.get_frame_rect()
+    if (this._isTiledLeftOrRight(workArea, frame)) {
+      this._warp(window, frame.x, workArea.y + Math.floor(workArea.height /  2), frame.width, Math.floor(workArea.height / 2));
+    }
+  }
+
+
   _warp(window, nwx, nwy, width, height) {
     window.move_resize_frame(true, nwx, nwy, width, height);
     window.raise()
   }
 
+
+  _isTiledLeftOrRight(workArea, frame) {
+    return (frame.x == workArea.x || frame.x == workArea.x + Math.floor(workArea.width / 2)) && frame.width == Math.floor(workArea.width / 2)
+  }
 
   _trackAllWindows() {
     this.windowCreatedSignal = global.display.connect('window-created', this._onWindowCreated.bind(this));
