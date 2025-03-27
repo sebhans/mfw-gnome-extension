@@ -1,10 +1,57 @@
 const { Clutter, Meta, Shell, St } = imports.gi;
 const ExtensionUtils = imports.misc.extensionUtils;
+const Main = imports.ui.main
 const Me = ExtensionUtils.getCurrentExtension();
 const Util = imports.misc.util;
 
 const WARP_DISTANCE = 100;
 const WINDOW_FUZZ_DISTANCE = 20;
+
+const MAXIMIZE_SHORTCUT = "<Super>Up"
+const SPLIT_LEFT_SHORTCUT = "<Super>Left"
+const SPLIT_RIGHT_SHORTCUT = "<Super>Right"
+
+
+class KeyManager {
+  constructor() {
+    this.grabbers = new Map()
+    global.display.connect( 'accelerator-activated', this._onAccelerator.bind(this))
+  }
+
+  listenFor(accelerator, callback) {
+    console.debug('Trying to listen for keyboard shortcut', accelerator)
+    let action = global.display.grab_accelerator(accelerator, Meta.KeyBindingFlags.IGNORE_AUTOREPEAT)
+
+    if (action == Meta.KeyBindingAction.NONE) {
+      console.warn('Unable to grab accelerator', accelerator)
+    } else {
+      let name = Meta.external_binding_name_for_action(action)
+      Main.wm.allowKeybinding(name, Shell.ActionMode.ALL)
+      this.grabbers.set(action, {
+        name: name,
+        accelerator: accelerator,
+        callback: callback,
+        action: action
+      })
+    }
+  }
+
+  unbindAll() {
+    for (let it of this.grabbers) {
+      global.display.ungrab_accelerator(it.action)
+      Main.wm.allowKeybinding(it.name, Shell.ActionMode.NONE)
+    }
+    this.grabbers = new Map()
+  }
+
+  _onAccelerator(_display, action, _deviceId, _timestamp) {
+    let grabber = this.grabbers.get(action)
+
+    if (grabber) {
+      this.grabbers.get(action).callback()
+    }
+  }
+}
 
 
 class Extension {
@@ -13,6 +60,8 @@ class Extension {
     this.windowSignals = new Map();
     this.windowGeometries = new Map();
     this.focusedWindowId = null;
+
+    this._keyManager = null;
   }
 
 
@@ -26,6 +75,7 @@ class Extension {
   enable() {
     console.debug(`enabling ${Me.metadata.name}`);
     Util.spawn(['/usr/local/bin/input-emulator', 'start', 'mouse', '--x-max', '5000', '--y-max', '5000']);
+    this._setUpKeyboardShortcuts();
     this._trackAllWindows();
   }
 
@@ -41,6 +91,52 @@ class Extension {
     console.debug(`disabling ${Me.metadata.name}`);
     this._untrackAllWindows();
     Util.spawn(['/usr/local/bin/input-emulator', 'stop', 'mouse']);
+  }
+
+
+  _setUpKeyboardShortcuts() {
+    this._keyManager = new KeyManager();
+    this._keyManager.listenFor(MAXIMIZE_SHORTCUT, this._handleMaximize.bind(this))
+    this._keyManager.listenFor(SPLIT_LEFT_SHORTCUT, this._handleSplitLeft.bind(this))
+    this._keyManager.listenFor(SPLIT_RIGHT_SHORTCUT, this._handleSplitRight.bind(this))
+  }
+
+
+  _removeKeyboardShortcuts() {
+    if (this._keyManager) {
+      this._keyManager.unbindAll()
+      this._keyManager = null
+    }
+  }
+
+
+  _handleMaximize() {
+    const window = global.display.focus_window;
+    if (!window) return;
+    const workArea = window.get_work_area_current_monitor();
+    this._warp(window, workArea.x, workArea.y, workArea.width, workArea.height);
+  };
+
+
+  _handleSplitLeft() {
+    const window = global.display.focus_window;
+    if (!window) return;
+    const workArea = window.get_work_area_current_monitor();
+    this._warp(window, workArea.x, workArea.y, workArea.width / 2, workArea.height);
+  };
+
+
+  _handleSplitRight() {
+    const window = global.display.focus_window;
+    if (!window) return;
+    const workArea = window.get_work_area_current_monitor();
+    this._warp(window, workArea.x + workArea.width / 2, workArea.y, workArea.width / 2, workArea.height);
+  };
+
+
+  _warp(window, nwx, nwy, width, height) {
+    window.move_resize_frame(true, nwx, nwy, width, height);
+    window.raise()
   }
 
 
