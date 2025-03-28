@@ -134,6 +134,7 @@ class Extension {
   _handleUnmaximize() {
     const window = global.display.focus_window;
     if (!window) return;
+    console.warn(`[mfw-extension] unmaximizing ${window.get_title()}`)
     this._unmaximize(window);
   }
 
@@ -160,7 +161,7 @@ class Extension {
   _handleSplitUp() {
     const window = global.display.focus_window;
     if (!window) return;
-    console.warn('[mfw-extension] splitting up')
+    console.warn(`[mfw-extension] splitting up ${window.get_title()}`)
     const workArea = window.get_work_area_current_monitor();
     const frame = window.get_frame_rect()
     if (this._isTiledLeftOrRight(workArea, frame)) {
@@ -175,10 +176,14 @@ class Extension {
   _handleSplitDown() {
     const window = global.display.focus_window;
     if (!window) return;
+    console.warn(`[mfw-extension] splitting down ${window.get_title()}`)
     const workArea = window.get_work_area_current_monitor();
     const frame = window.get_frame_rect()
     if (this._isTiledLeftOrRight(workArea, frame)) {
+      console.warn('[mfw-extension] is tiled')
       this._warp(window, frame.x, workArea.y + Math.floor(workArea.height /  2), frame.width, Math.floor(workArea.height / 2));
+    } else {
+      console.warn('[mfw-extension] is NOT tiled')
     }
   }
 
@@ -234,10 +239,6 @@ class Extension {
         return;
     }
     console.warn(`[mfw-extension] tracking window ${window.get_title()}`)
-    console.warn(`[mfw-extension] maximized horizontally: ${window.maximized_horizontally}`)
-    console.warn(`[mfw-extension] maximized vertically: ${window.maximized_vertically}`)
-    console.warn(`[mfw-extension] maximized: ${window.maximized}`)
-    console.warn(`[mfw-extension] is_maximized: ${window.is_maximized}`)
 
 
     const signals = [
