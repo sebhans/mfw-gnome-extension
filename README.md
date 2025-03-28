@@ -12,10 +12,8 @@ arranged horizontally.
 ## Keyboard Shortcuts
 - `Super+Up`: Maximize current window
 - `Super+Down`: Unmaximize current window
-- `Super+Shift+Left`: Tile window to left half of screen. If already tiled left, move to right half of left monitor
-- `Super+Shift+Right`: Tile window to right half of screen. If already tiled right, move to left half of right monitor
-- `Super+Shift+Up`: If window is split left/right, splits it to the top quarter
-- `Super+Shift+Down`: If window is split left/right, splits it to the bottom quarter
+- `Super+Shift+Left`/`Super+Shift+Right`: Tile window to left/right half of screen. If already tiled on this side, move to the next monitor in this direction
+- `Super+Shift+Up`/`Super+Shift+Down`: If window is tiled left/right, toggle between full height and upper/lower quarter
 
 ## Compatibility & caveats
 Compatible with GNOME shell 42 under Wayland.

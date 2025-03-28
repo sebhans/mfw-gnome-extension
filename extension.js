@@ -200,12 +200,17 @@ class Extension {
     console.warn(`[mfw-extension] splitting up ${window.get_title()}`)
     const workArea = window.get_work_area_current_monitor();
     const frame = window.get_frame_rect()
-    if (this._isTiledLeftOrRight(workArea, frame)) {
-      console.warn('[mfw-extension] is tiled')
-      this._warp(window, frame.x, workArea.y, frame.width, Math.floor(workArea.height / 2));
-    } else {
+    if (!this._isTiledLeftOrRight(workArea, frame)) {
       console.warn('[mfw-extension] is NOT tiled')
+      return;
     }
+    if (this._isTiledDown(workArea, frame)) {
+      console.warn('[mfw-extension] is tiled down')
+      this._warp(window, frame.x, workArea.y, frame.width, workArea.height);
+      return;
+    }
+    console.warn('[mfw-extension] is tiled')
+    this._warp(window, frame.x, workArea.y, frame.width, Math.floor(workArea.height / 2));
   }
 
 
@@ -215,18 +220,33 @@ class Extension {
     console.warn(`[mfw-extension] splitting down ${window.get_title()}`)
     const workArea = window.get_work_area_current_monitor();
     const frame = window.get_frame_rect()
-    if (this._isTiledLeftOrRight(workArea, frame)) {
-      console.warn('[mfw-extension] is tiled')
-      this._warp(window, frame.x, workArea.y + Math.floor(workArea.height /  2), frame.width, Math.floor(workArea.height / 2));
-    } else {
+    if (!this._isTiledLeftOrRight(workArea, frame)) {
       console.warn('[mfw-extension] is NOT tiled')
+      return;
     }
+    if (this._isTiledUp(workArea, frame)) {
+      console.warn('[mfw-extension] is tiled up')
+      this._warp(window, frame.x, workArea.y, frame.width, workArea.height);
+      return;
+    }
+    console.warn('[mfw-extension] is tiled')
+    this._warp(window, frame.x, workArea.y + Math.floor(workArea.height / 2), frame.width, Math.floor(workArea.height / 2));
   }
 
 
   _warp(window, nwx, nwy, width, height) {
     window.move_resize_frame(true, nwx, nwy, width, height);
     window.raise()
+  }
+
+
+  _isTiledUp(workArea, frame) {
+    return frame.y == workArea.y && frame.height == Math.floor(workArea.height / 2);
+  }
+
+
+  _isTiledDown(workArea, frame) {
+    return frame.y == workArea.y + Math.floor(workArea.height / 2) && frame.height == Math.floor(workArea.height / 2);
   }
 
 
