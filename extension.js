@@ -10,8 +10,8 @@ const BOTH_DIRECTIONS = 3;
 
 const MAXIMIZE_SHORTCUT = "<Super>Up"
 const UNMAXIMIZE_SHORTCUT = "<Super>Down"
-const SPLIT_LEFT_SHORTCUT = "<Super>Left"
-const SPLIT_RIGHT_SHORTCUT = "<Super>Right"
+const SPLIT_LEFT_SHORTCUT = "<Super><Shift>Left"
+const SPLIT_RIGHT_SHORTCUT = "<Super><Shift>Right"
 const SPLIT_UP_SHORTCUT = "<Super><Shift>Up"
 const SPLIT_DOWN_SHORTCUT = "<Super><Shift>Down"
 
