@@ -123,11 +123,13 @@ class Extension {
     if (!window) return;
     console.warn(`[mfw-extension] maximizing ${window.get_title()}`)
     window.maximize(BOTH_DIRECTIONS);
+    window.raise()
   };
 
   _unmaximize(window) {
     if (window.maximized_horizontally || window.maximized_vertically) {
       window.unmaximize(BOTH_DIRECTIONS);
+      window.raise()
     }
   }
 
