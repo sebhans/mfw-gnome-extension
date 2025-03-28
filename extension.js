@@ -172,8 +172,25 @@ class Extension {
     if (!window) return;
     console.warn(`[mfw-extension] splitting right ${window.get_title()}`)
     const workArea = window.get_work_area_current_monitor();
+
+    if (!this._isTiledRight(workArea, window.get_frame_rect())) {
+      this._unmaximize(window);
+      this._warp(window, workArea.x + Math.floor(workArea.width / 2), workArea.y, Math.floor(workArea.width / 2), workArea.height);
+      return;
+    }
+
+    const monitor = window.get_monitor();
+    const targetMonitor = global.display.get_monitor_neighbor_index(monitor, Meta.DisplayDirection.RIGHT);
+    if (targetMonitor == -1) {
+      console.warn(`[mfw-extension] is tiled right on monitor ${monitor} and there is no monitor further right`)
+      return;
+    }
+
+    console.warn(`[mfw-extension] is tiled right on monitor ${monitor}; moving to monitor ${targetMonitor}`)
     this._unmaximize(window);
-    this._warp(window, workArea.x + Math.floor(workArea.width / 2), workArea.y, Math.floor(workArea.width / 2), workArea.height);
+    window.move_to_monitor(targetMonitor);
+    const targetWorkArea = window.get_work_area_for_monitor(targetMonitor);
+    this._warp(window, targetWorkArea.x, targetWorkArea.y, Math.floor(targetWorkArea.width / 2), targetWorkArea.height);
   };
 
 
