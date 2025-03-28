@@ -145,8 +145,25 @@ class Extension {
     if (!window) return;
     console.warn(`[mfw-extension] splitting left ${window.get_title()}`)
     const workArea = window.get_work_area_current_monitor();
+
+    if (!this._isTiledLeft(workArea, window.get_frame_rect())) {
+      this._unmaximize(window);
+      this._warp(window, workArea.x, workArea.y, Math.floor(workArea.width / 2), workArea.height);
+      return;
+    }
+
+    const monitor = window.get_monitor();
+    const targetMonitor = global.display.get_monitor_neighbor_index(monitor, Meta.DisplayDirection.LEFT);
+    if (targetMonitor == -1) {
+      console.warn(`[mfw-extension] is tiled left on monitor ${monitor} and there is no monitor further left`)
+      return;
+    }
+
+    console.warn(`[mfw-extension] is tiled left on monitor ${monitor}; moving to monitor ${targetMonitor}`)
     this._unmaximize(window);
-    this._warp(window, workArea.x, workArea.y, Math.floor(workArea.width / 2), workArea.height);
+    window.move_to_monitor(targetMonitor);
+    const targetWorkArea = window.get_work_area_for_monitor(targetMonitor);
+    this._warp(window, targetWorkArea.x + Math.floor(targetWorkArea.width / 2), targetWorkArea.y, Math.floor(targetWorkArea.width / 2), targetWorkArea.height);
   };
 
 
@@ -196,9 +213,20 @@ class Extension {
   }
 
 
-  _isTiledLeftOrRight(workArea, frame) {
-    return (frame.x == workArea.x || frame.x == workArea.x + Math.floor(workArea.width / 2)) && frame.width == Math.floor(workArea.width / 2)
+  _isTiledLeft(workArea, frame) {
+    return frame.x == workArea.x && frame.width == Math.floor(workArea.width / 2);
   }
+
+
+  _isTiledRight(workArea, frame) {
+    return frame.x == workArea.x + Math.floor(workArea.width / 2) && frame.width == Math.floor(workArea.width / 2);
+  }
+
+
+  _isTiledLeftOrRight(workArea, frame) {
+    return this._isTiledLeft(workArea, frame) || this._isTiledRight(workArea, frame);
+  }
+
 
   _trackAllWindows() {
     console.warn('[mfw-extension] tracking all windows')
